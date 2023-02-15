@@ -28,6 +28,8 @@ namespace log
             var list = SerialPort.GetPortNames();
             foreach (var name in list)
                 Console.WriteLine(name);
+            //加个test参数
+            Console.WriteLine("test");
         }
 
         private static void ResetDevice(string port)
@@ -44,6 +46,22 @@ namespace log
         private static EventWaitHandle WaitUartReceive = new AutoResetEvent(true);
         private static void LogDevice(string port)
         {
+            var output = Console.OpenStandardOutput();
+            //测试模式
+            if (port == "test")
+            {
+                var buff = new byte[] { 0x30, 0x31, 0x32, 0x0d, 0x0a, 0x35, 0x36, 0x37, 0x0d, 0x0a };
+                var buff2 = new byte[] { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x35, 0x36 };
+                while (true)
+                {
+                    output.Write(buff);
+                    output.Flush();
+                    output.Write(buff2);
+                    output.Flush();
+                    Thread.Sleep(1000);
+                }
+            }
+
             var p = new SerialPort(port);
             p.DataReceived += (_,_) =>
             {
@@ -52,7 +70,6 @@ namespace log
             p.Open();
             p.RtsEnable = false;
 
-            var output = Console.OpenStandardOutput();
             WaitUartReceive.Reset();
             while (true)
             {

@@ -1,8 +1,7 @@
 {
   "profiles": {
     "log": {
-      "commandName": "Project",
-      "commandLineArgs": "test log COM15"
+      "commandName": "Project"
     }
   }
 }
