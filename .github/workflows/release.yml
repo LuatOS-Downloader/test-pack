@@ -1,0 +1,67 @@
+name: release
+
+on:
+  push:
+    tags:
+    - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: environment prepare
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https
+          sudo apt-get update
+          sudo apt-get install -y dotnet-sdk-6.0
+      - name: build
+        run: |
+          mkdir pkg
+          mkdir pkg/test-win_x64
+          mkdir pkg/test-win_x64/logger
+          mkdir pkg/test-win_x64/downloader
+          mkdir pkg/test-win_x64/firmware_maker
+          sed -i "s/to_replace/win_x64/g" config.toml
+          cp config.toml pkg/test-win_x64/config.toml
+          cd log
+          dotnet publish -r win-x64 -p:PublishSingleFile=true --no-self-contained
+          mv bin/Debug/net6.0/win-x64/publish/* ../pkg/test-win_x64/logger
+          chmod +x -R ../pkg/test-win_x64/logger
+          cd ../down
+          dotnet publish -r win-x64 -p:PublishSingleFile=true --no-self-contained
+          mv bin/Debug/net6.0/win-x64/publish/* ../pkg/test-win_x64/downloader
+          chmod +x -R ../pkg/test-win_x64/downloader
+          cd ../fm
+          dotnet publish -r win-x64 -p:PublishSingleFile=true --no-self-contained
+          mv bin/Debug/net6.0/win-x64/publish/* ../pkg/test-win_x64/firmware_maker
+          chmod +x -R ../pkg/test-win_x64/firmware_maker
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-win_x64
+          path: pkg/
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build]
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: test-win_x64
+        path: pack/
+
+    - name: Create Release Asset
+      run: |
+        cd pack
+        zip -r test-win_x64.zip test-win_x64/
+        cd ..
+        mv pack/test-win_x64.zip test-win_x64.zip
+
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "test-win_x64.zip"
