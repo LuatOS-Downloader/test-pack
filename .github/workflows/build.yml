@@ -41,19 +41,26 @@ jobs:
           DOTNETARCH: ${{ matrix.dotnetarch }}
         run: |
           mkdir pkg
-          sed -i "s/to_replace/$DOTNETOS-$DOTNETARCH/g" config.toml
-          cp config.toml pkg/config.toml
+          mkdir pkg/test-$DOTNETOS_$DOTNETARCH
+          mkdir pkg/test-$DOTNETOS_$DOTNETARCH/logger
+          mkdir pkg/test-$DOTNETOS_$DOTNETARCH/downloader
+          mkdir pkg/test-$DOTNETOS_$DOTNETARCH/firmware_maker
+          sed -i "s/to_replace/$DOTNETOS_$DOTNETARCH/g" config.toml
+          cp config.toml pkg/test-$DOTNETOS_$DOTNETARCH/config.toml
           cd log
           dotnet publish -r $DOTNETOS-$DOTNETARCH -p:PublishSingleFile=true --no-self-contained
-          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/
+          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/test-$DOTNETOS_$DOTNETARCH/logger
+          chmod +x -R ../pkg/test-$DOTNETOS_$DOTNETARCH/logger
           cd ../down
           dotnet publish -r $DOTNETOS-$DOTNETARCH -p:PublishSingleFile=true --no-self-contained
-          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/
+          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/test-$DOTNETOS_$DOTNETARCH/downloader
+          chmod +x -R ../pkg/test-$DOTNETOS_$DOTNETARCH/downloader
           cd ../fm
           dotnet publish -r $DOTNETOS-$DOTNETARCH -p:PublishSingleFile=true --no-self-contained
-          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/
+          mv bin/Debug/net6.0/$DOTNETOS-$DOTNETARCH/publish/* ../pkg/test-$DOTNETOS_$DOTNETARCH/firmware_maker
+          chmod +x -R ../pkg/test-$DOTNETOS_$DOTNETARCH/firmware_maker
 
       - uses: actions/upload-artifact@v3
         with:
-          name: test-pack-${{ matrix.dotnetos }}-${{ matrix.dotnetarch }}
+          name: test-${{ matrix.dotnetos }}_${{ matrix.dotnetarch }}
           path: pkg/
