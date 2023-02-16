@@ -21,4 +21,4 @@ show = true
 
 #其他信息，给命令行参数使用
 [others]
-cmd_args = ["extra_arg1","extra_arg2"] # 如用不到，可为空数组
+
